@@ -3,8 +3,8 @@ pandas
 yfinance
 pandas_ta
 plotly
-pyyaml
-streamlit-authenticator
+PyYAML
+streamlit-authenticator==0.1.6
 seaborn
 selenium
 tensorflow
