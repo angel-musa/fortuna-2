@@ -57,11 +57,3 @@ def fetch_sentiment_image(company_name):
         st.error("An error occurred while fetching the sentiment analysis image.")
         st.error(str(e))
         return None
-
-# Example usage in a Streamlit app
-st.title("Sentiment Analysis")
-company_name = st.text_input("Enter the company name:")
-if company_name:
-    sentiment_image = fetch_sentiment_image(company_name)
-    if sentiment_image:
-        st.image(sentiment_image, caption=f"Sentiment Analysis for {company_name}")
