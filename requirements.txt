@@ -1,0 +1,13 @@
+streamlit
+pandas
+yfinance
+pandas_ta
+plotly
+pyyaml
+streamlit-authenticator
+seaborn
+tensorflow
+scikit-learn
+matplotlib
+numpy
+setuptools>=65.5.0
