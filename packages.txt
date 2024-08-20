@@ -12,3 +12,4 @@ libx11-xcb1
 libxss1
 libgbm-dev
 libglib2.0-0
+google-chrome-stable

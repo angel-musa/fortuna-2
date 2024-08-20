@@ -14,12 +14,15 @@ import time
 # Function to fetch sentiment analysis image
 def fetch_sentiment_image(company_name):
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Ensure the browser runs headless
-    chrome_options.add_argument("--disable-gpu")  # Disable GPU
-    chrome_options.add_argument("--window-size=1920,1080")  # Set the window size to ensure everything is visible
-    chrome_options.add_argument("--no-sandbox")  # Bypass OS security model
-    chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.binary_location = "/usr/bin/google-chrome-stable"
 
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     try:
         # Install ChromeDriver and set up the WebDriver
         service = Service(ChromeDriverManager().install())
