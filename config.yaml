@@ -2,16 +2,15 @@ credentials:
   usernames:
     angel:
       email: angel@gmail.com
-      failed_login_attempts: 10  # Managed automaticallys
-      logged_in: False  # Managed automatically
-      name: Angel 
-      #password: def456  # Will be hashed automatically
+      failed_login_attempts: 10
+      logged_in: False
+      name: Angel
       password: $2b$12$KCTxmlp0Mf4r6ngZkavOEOkb2.JhZsXczsnZZsfQbztHSmSrsib0W
 
 cookie:
   expiry_days: 30
-  key: 'angel'  # Must be a string
-  name: user_session
+  key: 'angel-new'
+  name: 'user_session'
 
 pre-authorized:
   emails:
