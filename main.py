@@ -27,7 +27,7 @@ except yaml.YAMLError as exc:
     st.error(f"Error in configuration file: {exc}")
 
 # Initialize the authenticator and session state variables
-authenticator = initialize_authenticator(config_path)
+authenticator = initialize_authenticator(config)
 
 # Load tickers and initialize session state
 if 'tickers' not in st.session_state:
