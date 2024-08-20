@@ -89,3 +89,6 @@ tflite_convert.exe
 toco_from_protos.exe
 toco.exe
 ttx.ece
+f2py.exe
+jsonschema.exe
+ttx.exe
