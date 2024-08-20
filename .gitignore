@@ -46,9 +46,9 @@ coverage.xml
 # VSCode
 .vscode/
 
-# SQLite databases
-*.sqlite3
-*.db
+# # SQLite databases
+# *.sqlite3
+# *.db
 
 # Local files
 .DS_Store
