@@ -14,3 +14,4 @@ numpy
 setuptools>=65.5.0
 webdriver-manager
 Pillow
+openpyxl
