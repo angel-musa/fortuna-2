@@ -6,8 +6,11 @@ plotly
 pyyaml
 streamlit-authenticator
 seaborn
+selenium
 tensorflow
 scikit-learn
 matplotlib
 numpy
 setuptools>=65.5.0
+webdriver-manager
+Pillow
