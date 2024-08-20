@@ -14,13 +14,6 @@ st.set_page_config(
 )
 
 
-# Reset session state variables to avoid interference
-if 'authentication_status' in st.session_state:
-    del st.session_state['authentication_status']
-if 'username' in st.session_state:
-    del st.session_state['username']
-if 'name' in st.session_state:
-    del st.session_state['name']
 
 load_css()
 
@@ -34,8 +27,18 @@ except FileNotFoundError:
 except yaml.YAMLError as exc:
     st.error(f"Error in configuration file: {exc}")
 
+# Reset session state variables to avoid interference
+if 'authentication_status' in st.session_state:
+    del st.session_state['authentication_status']
+if 'username' in st.session_state:
+    del st.session_state['username']
+if 'name' in st.session_state:
+    del st.session_state['name']
+
 # Initialize the authenticator and session state variables
 authenticator = initialize_authenticator(config)
+
+
 
 # Load tickers and initialize session state
 if 'tickers' not in st.session_state:
