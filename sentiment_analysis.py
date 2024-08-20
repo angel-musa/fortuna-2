@@ -1,75 +1,67 @@
 import streamlit as st
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, WebDriverException
-from webdriver_manager.chrome import ChromeDriverManager
 from PIL import Image
 import io
-import time
+import requests
+from bs4 import BeautifulSoup
 
 # Function to fetch sentiment analysis image
 def fetch_sentiment_image(company_name):
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.binary_location = "/usr/bin/google-chrome-stable"
-
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
     try:
-        # Install ChromeDriver and set up the WebDriver
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        # Base URL for the sentiment analysis website
+        url = "https://www.csc2.ncsu.edu/faculty/healey/social-media-viz/production/"
 
-        try:
-            # Open the website
-            url = "https://www.csc2.ncsu.edu/faculty/healey/social-media-viz/production/"
-            driver.get(url)
+        # Send a GET request to the website
+        response = requests.get(url)
+        
+        if response.status_code != 200:
+            st.error("Failed to load the sentiment analysis website.")
+            return None
 
-            # Wait for the search input to be present
-            search_box = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "#query-inp"))
-            )
+        # Parse the HTML content using BeautifulSoup
+        soup = BeautifulSoup(response.content, 'html.parser')
 
-            # Input the company name
-            search_box.clear()
-            search_box.send_keys(company_name)
+        # Simulate entering the company name in the search box
+        search_box = soup.find("input", {"id": "query-inp"})
+        if not search_box:
+            st.error("Search box not found on the page.")
+            return None
 
-            # Submit the form by clicking the 'Query' button
-            query_button = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "#query-btn"))
-            )
-            query_button.click()
+        # Simulate the process that would occur when inputting the company name
+        # This approach assumes a basic GET request is sufficient, which may need to be adjusted
+        # based on the actual website's form handling.
+        form_data = {'query': company_name}
+        response = requests.post(url, data=form_data)
+        
+        # Parse the new content with the search results
+        soup = BeautifulSoup(response.content, 'html.parser')
 
-            # Wait for the posts to be fully loaded
-            time.sleep(30)
+        # Find the sentiment analysis image
+        image_element = soup.find("img", {"id": "post-canvas"})
+        if not image_element:
+            st.error("Sentiment analysis image not found.")
+            return None
 
-            # Locate the image using the provided selector
-            image_element = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "#post-canvas"))
-            )
+        # Get the image URL and fetch the image
+        image_url = url + image_element['src']
+        image_response = requests.get(image_url)
+        
+        if image_response.status_code != 200:
+            st.error("Failed to load the sentiment analysis image.")
+            return None
 
-            # Capture the image from the element
-            image_data = image_element.screenshot_as_png
+        # Convert the image to a PIL Image object and return it
+        image = Image.open(io.BytesIO(image_response.content))
+        return image
 
-            # Return the image data
-            return Image.open(io.BytesIO(image_data))
-
-        except TimeoutException as e:
-            st.error("Failed to load the sentiment analysis image. The element might not be present or the page took too long to load.")
-            driver.save_screenshot("debug_screenshot.png")
-            st.image("debug_screenshot.png", caption="Debug Screenshot")
-        finally:
-            driver.quit()
-
-    except WebDriverException as e:
-        st.error("WebDriver encountered an error. This may be due to the environment limitations.")
+    except Exception as e:
+        st.error("An error occurred while fetching the sentiment analysis image.")
         st.error(str(e))
+        return None
 
+# Example usage in a Streamlit app
+st.title("Sentiment Analysis")
+company_name = st.text_input("Enter the company name:")
+if company_name:
+    sentiment_image = fetch_sentiment_image(company_name)
+    if sentiment_image:
+        st.image(sentiment_image, caption=f"Sentiment Analysis for {company_name}")
