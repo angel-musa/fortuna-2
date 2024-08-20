@@ -5,6 +5,7 @@ from utils import load_yaml_config, load_ticker_company_map, load_css
 from pathlib import Path
 import yaml
 
+
 # Set the page configuration
 st.set_page_config(
     page_title="Fortuna",
@@ -12,21 +13,26 @@ st.set_page_config(
     layout="wide",
 )
 
+
+# Reset session state variables to avoid interference
+if 'authentication_status' in st.session_state:
+    del st.session_state['authentication_status']
+if 'username' in st.session_state:
+    del st.session_state['username']
+if 'name' in st.session_state:
+    del st.session_state['name']
+
 load_css()
 
 # Load the YAML configuration file
-config_path = Path(__file__).parent /'config.yaml'
-
+config_path = Path(__file__).parent / 'config.yaml'
 try:
     with open(config_path) as file:
         config = yaml.safe_load(file)
-        st.write("Config loaded successfully")
-        st.write(config)  # Print to verify its contents
 except FileNotFoundError:
     st.error(f"Configuration file not found: {config_path}")
 except yaml.YAMLError as exc:
     st.error(f"Error in configuration file: {exc}")
-
 
 # Initialize the authenticator and session state variables
 authenticator = initialize_authenticator(config)
@@ -41,4 +47,5 @@ header.render_header()
 
 # Render the sidebar alternative (Edit Filters, Watchlist, Login)
 sidebar_alternative.render_sidebar_alternative(authenticator)
+
 
