@@ -13,9 +13,15 @@ st.set_page_config(
     layout="wide",
 )
 
-
-
 load_css()
+
+# Reset session state variables to avoid interference
+if 'authentication_status' in st.session_state:
+    del st.session_state['authentication_status']
+if 'username' in st.session_state:
+    del st.session_state['username']
+if 'name' in st.session_state:
+    del st.session_state['name']
 
 # Load the YAML configuration file
 config_path = Path(__file__).parent / 'config.yaml'
@@ -27,13 +33,6 @@ except FileNotFoundError:
 except yaml.YAMLError as exc:
     st.error(f"Error in configuration file: {exc}")
 
-# Reset session state variables to avoid interference
-if 'authentication_status' in st.session_state:
-    del st.session_state['authentication_status']
-if 'username' in st.session_state:
-    del st.session_state['username']
-if 'name' in st.session_state:
-    del st.session_state['name']
 
 # Initialize the authenticator and session state variables
 authenticator = initialize_authenticator(config)
