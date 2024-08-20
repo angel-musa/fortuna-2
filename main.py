@@ -15,19 +15,19 @@ st.set_page_config(
 load_css()
 
 # Load the YAML configuration file
-# config_path = Path(__file__).parent /'config.yaml'
-config = load_yaml_config('config.yaml')
+config_path = Path(__file__).parent /'config.yaml'
+# config = load_yaml_config('config.yaml')
 # Ensure the file exists and is correctly loaded
-# try:
-#     with open(config_path) as file:
-#         config = yaml.safe_load(file)
-# except FileNotFoundError:
-#     st.error(f"Configuration file not found: {config_path}")
-# except yaml.YAMLError as exc:
-#     st.error(f"Error in configuration file: {exc}")
+try:
+    with open(config_path) as file:
+        config = yaml.safe_load(file)
+except FileNotFoundError:
+    st.error(f"Configuration file not found: {config_path}")
+except yaml.YAMLError as exc:
+    st.error(f"Error in configuration file: {exc}")
 
 # Initialize the authenticator and session state variables
-authenticator = initialize_authenticator(config)
+authenticator = initialize_authenticator(config_path)
 
 # Load tickers and initialize session state
 if 'tickers' not in st.session_state:
