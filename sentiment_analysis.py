@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from webdriver_manager.chrome import ChromeDriverManager
 from PIL import Image
 import io
@@ -20,46 +20,53 @@ def fetch_sentiment_image(company_name):
     chrome_options.add_argument("--no-sandbox")  # Bypass OS security model
     chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
 
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-
     try:
-        # Open the website
-        url = "https://www.csc2.ncsu.edu/faculty/healey/social-media-viz/production/"
-        driver.get(url)
+        # Install ChromeDriver and set up the WebDriver
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
 
-        # Wait for the search input to be present
-        search_box = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "#query-inp"))
-        )
+        try:
+            # Open the website
+            url = "https://www.csc2.ncsu.edu/faculty/healey/social-media-viz/production/"
+            driver.get(url)
 
-        # Input the company name
-        search_box.clear()
-        search_box.send_keys(company_name)
+            # Wait for the search input to be present
+            search_box = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#query-inp"))
+            )
 
-        # Submit the form by clicking the 'Query' button
-        query_button = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "#query-btn"))
-        )
-        query_button.click()
+            # Input the company name
+            search_box.clear()
+            search_box.send_keys(company_name)
 
-        # Wait for 30 seconds to ensure the posts are fully loaded
-        time.sleep(30)
+            # Submit the form by clicking the 'Query' button
+            query_button = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#query-btn"))
+            )
+            query_button.click()
 
-        # Locate the image using the provided selector
-        image_element = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "#post-canvas"))
-        )
+            # Wait for the posts to be fully loaded
+            time.sleep(30)
 
-        # Capture the image from the element
-        image_data = image_element.screenshot_as_png
+            # Locate the image using the provided selector
+            image_element = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#post-canvas"))
+            )
 
-        # Return the image data
-        return Image.open(io.BytesIO(image_data))
+            # Capture the image from the element
+            image_data = image_element.screenshot_as_png
 
-    except TimeoutException as e:
-        st.error("Failed to load the sentiment analysis image. The element might not be present or the page took too long to load.")
-        driver.save_screenshot("debug_screenshot.png")
-        st.image("debug_screenshot.png", caption="Debug Screenshot")
-    finally:
-        driver.quit()
+            # Return the image data
+            return Image.open(io.BytesIO(image_data))
+
+        except TimeoutException as e:
+            st.error("Failed to load the sentiment analysis image. The element might not be present or the page took too long to load.")
+            driver.save_screenshot("debug_screenshot.png")
+            st.image("debug_screenshot.png", caption="Debug Screenshot")
+        finally:
+            driver.quit()
+
+    except WebDriverException as e:
+        st.error("WebDriver encountered an error. This may be due to the environment limitations.")
+        st.error(str(e))
+
