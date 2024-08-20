@@ -1,0 +1,57 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# Environments
+.env
+venv/
+ENV/
+env.bak/
+venv.bak/
+pyvenv.cfg
+Scripts/pip.exe
+Scripts/pip*.exe
+Scripts/python.exe
+Scripts/pythonw.exe
+Scripts/*.bat
+Scripts/*.ps1
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# PyCharm
+.idea/
+
+# VSCode
+.vscode/
+
+# SQLite databases
+*.sqlite3
+*.db
+
+# Local files
+.DS_Store
+
+# Ignore the wheel, this is an executable.
+Scripts/wheel.exe
