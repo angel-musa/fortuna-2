@@ -55,3 +55,37 @@ coverage.xml
 
 # Ignore the wheel, this is an executable.
 Scripts/wheel.exe
+
+# Ignore specific executables and scripts
+Activate.ps1
+activate
+activate.bat
+deactivate.bat
+pip.exe
+pip3.11.exe
+pip3.exe
+pwiz.py
+python.exe
+pythonw.exe
+watchmedo.exe
+wheel.exe
+dotenv.exe
+p2py.exe
+fonttools.exe
+markdown_py.exe
+normalizer.exe
+pyftmerge.exe
+pyftsubset.exe
+wsdump.exe
+import_pb_to_tensorboard.exe
+markdown-it.exe
+sample.exe
+saved_model_cli.exe
+streamlit.cmd
+streamlit.exe
+tensorboard.exe
+tf_upgrade_v2.exe
+tflite_convert.exe
+toco_from_protos.exe
+toco.exe
+ttx.ece
