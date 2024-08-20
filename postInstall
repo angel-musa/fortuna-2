@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Download the Chrome package
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+
+# Install the Chrome package
+sudo dpkg -i google-chrome-stable_current_amd64.deb
+
+# Fix any missing dependencies
+sudo apt-get -f install -y
