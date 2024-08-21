@@ -13,6 +13,7 @@ from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+import pandas_ta as ta
 
 def forecast(ticker): 
 
@@ -64,7 +65,7 @@ def forecast(ticker):
     model.compile(optimizer='adam', loss='mean_squared_error')
 
     # Train the model
-    model.fit(X_train, y_train, epochs=10, batch_size=64)
+    model.fit(X_train, y_train, epochs=200, batch_size=64)
 
     # Prepare test data
     total_data = np.concatenate((train, test), axis=0)
@@ -152,6 +153,9 @@ def forecast(ticker):
     pred_prices = []
     last_60_days = azn_adj[-60:].values
 
+        # Calculate ATR
+    atr = ta.atr(azn_df['High'], azn_df['Low'], azn_df['Adj Close'], length=14).iloc[-1]
+
     for _ in range(5):
         # Scale the last 60 days data
         last_60_days_scaled = scaler.transform(last_60_days)
@@ -176,15 +180,23 @@ def forecast(ticker):
     # Get the last actual closing price from the data
     last_actual_close = azn_adj['Adj Close'].iloc[-1]
 
-    # Compare the average predicted price to the last actual closing price
-    if average_pred_price > last_actual_close:
-        result = "Positive"
+    # Compare the average predicted price to the ATR range
+    if average_pred_price > last_actual_close + atr:
+        result = "Above ATR"
+    elif average_pred_price < last_actual_close - atr:
+        result = "Below ATR"
     else:
-        result = "Negative"
+        result = "Within ATR"
+
+    # # Compare the average predicted price to the last actual closing price
+    # if average_pred_price > last_actual_close:
+    #     result = "Positive"
+    # else:
+    #     result = "Negative"
 
     # Output the result
     print(f"The average forecasted price for the next 5 days is {average_pred_price:.2f}.")
     print(f"The last actual closing price is {last_actual_close:.2f}.")
     print(f"The forecast is {result}.")
 
-    return average_pred_price, last_actual_close, result, fig
+    return average_pred_price, last_actual_close, result, fig, azn_df

@@ -1,6 +1,7 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
+import pandas_ta as ta
 from utils import cached_forecast, cached_sentiment_image, load_ticker_company_map, load_css
 
 
@@ -134,7 +135,7 @@ def render_forecast(selected_stock):
     with st.spinner('Running forecast...'):
         # Check if the data is available before attempting to forecast
         try:
-            average_pred_price, last_actual_close, result, fig = cached_forecast(selected_stock)
+            average_pred_price, last_actual_close, result, fig, df = cached_forecast(selected_stock)
             # Display the forecast results (whether recalculated or retrieved from session state)
             st.markdown("### Forecast Results")
             forecast_table = f"""
@@ -155,6 +156,16 @@ def render_forecast(selected_stock):
             """
             st.markdown(forecast_table, unsafe_allow_html=True)
             st.plotly_chart(fig)
+            
+            # Display the Average True Range (ATR) value
+            atr_value = ta.atr(
+                df['High'],
+                df['Low'],
+                df['Adj Close'],
+                length=14
+            ).iloc[-1]
+
+            st.markdown(f"### Average True Range (ATR): {atr_value:.2f}")
 
         except ValueError as e:
             st.error(f"Error generating forecast: {e}")
