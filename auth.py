@@ -20,6 +20,10 @@ def handle_authentication(authenticator):
         st.session_state['username'] = None
     if 'name' not in st.session_state:
         st.session_state['name'] = None
+    if 'watchlist' not in st.session_state:
+        st.session_state['watchlist'] = []  # Initialize an empty watchlist
+    if 'watchlist_loaded' not in st.session_state:
+        st.session_state['watchlist_loaded'] = False  # Track if the watchlist has been loaded
 
     # Perform login
     name, authentication_status, username = authenticator.login(location='main')
@@ -28,8 +32,16 @@ def handle_authentication(authenticator):
         st.session_state['authentication_status'] = True
         st.session_state['username'] = username
         st.session_state['name'] = name
-    # Do not re-prompt login on successful login
+        
+        # Load the watchlist if it's not loaded yet
+        if not st.session_state['watchlist_loaded']:
+            st.session_state['watchlist'] = load_watchlist_from_db(username)
+            st.session_state['watchlist_loaded'] = True
+    else:
+        st.session_state['watchlist_loaded'] = False
+
     return authentication_status, username, name
+
 
 
 def load_user_watchlist():

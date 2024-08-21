@@ -23,6 +23,8 @@ def render_sidebar_alternative(authenticator):
                     render_watchlist()
                 else:
                     st.write("Loading your watchlist...")
+                    # You might consider forcing a reload or some feedback here
+                    
             else:
                 st.write("Please log in to view your watchlist.")
 
@@ -37,6 +39,7 @@ def render_sidebar_alternative(authenticator):
             render_tabs(selected_stock)
         else:
             st.write("Please select a stock to view the data.")
+
 
 def render_edit_filters():
     """Renders the filter options for selecting time period, graph type, and technical indicators."""
@@ -61,6 +64,9 @@ def render_edit_filters():
 
 def render_watchlist():
     load_css()
+    st.write(f"Debug: Watchlist loaded status - {st.session_state.get('watchlist_loaded')}")
+    st.write(f"Debug: Current Watchlist - {st.session_state.get('watchlist')}")
+
     if st.session_state.watchlist:
         col5, col6 = st.columns([2, 1])
 
