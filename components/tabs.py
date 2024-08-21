@@ -34,6 +34,19 @@ def render_overview(ticker):
     """
     st.markdown(overview_content)
 
+def format_large_number(num):
+    """Formats a number to 3 significant figures and adds a suffix (B, M, T)."""
+    if isinstance(num, (int, float)):
+        if abs(num) >= 1_000_000_000_000:  # Trillion
+            return f"{num / 1_000_000_000_000:.3g} T"
+        elif abs(num) >= 1_000_000_000:  # Billion
+            return f"{num / 1_000_000_000:.3g} B"
+        elif abs(num) >= 1_000_000:  # Million
+            return f"{num / 1_000_000:.3g} M"
+        else:  # Less than a million
+            return f"{num:,.2f}"
+    return num  # If num is 'N/A' or any other non-numeric value
+
 def render_financials(ticker):
     load_css()
     info = ticker.info
@@ -53,15 +66,20 @@ def render_financials(ticker):
     if profit_margin == 'N/A' and revenue != 'N/A' and earnings != 'N/A':
         profit_margin = earnings / revenue
 
+    # Format large numbers
+    revenue = format_large_number(revenue)
+    earnings = format_large_number(earnings)
+    market_cap = format_large_number(market_cap)
+
     financials_html = f"""
     <table class="financials-table">
         <tr>
             <th>Revenue</th>
-            <td>{revenue:,}</td>
+            <td>{revenue}</td>
         </tr>
         <tr>
             <th>Earnings</th>
-            <td>{earnings:,}</td>
+            <td>{earnings}</td>
         </tr>
         <tr>
             <th>EPS</th>
@@ -69,7 +87,7 @@ def render_financials(ticker):
         </tr>
         <tr>
             <th>PE Ratio</th>
-            <td>{pe_ratio}</td>
+            <td>{pe_ratio:.2f}</td>
         </tr>
         <tr>
             <th>Gross Margin</th>
@@ -81,11 +99,12 @@ def render_financials(ticker):
         </tr>
         <tr>
             <th>Market Cap</th>
-            <td>{market_cap:,}</td>
+            <td>{market_cap}</td>
         </tr>
     </table>
     """
     st.markdown(financials_html, unsafe_allow_html=True)
+
 
 def render_latest_news(ticker):
     load_css()
