@@ -61,6 +61,11 @@ def render_login(authenticator, key="main_login"):
         load_user_watchlist()  # Ensure the watchlist is loaded after login
         if authenticator.logout(location='main'):
             handle_logout()
+             # Button to report a bug that redirects to the Microsoft Form
+        if st.button("Report a Bug"):
+            st.markdown("""
+            <meta http-equiv="refresh" content="0; url=https://forms.office.com/r/LTHchSsvCm" />
+            """, unsafe_allow_html=True)
     elif authentication_status is False:
         st.error('Username/password is incorrect')
     elif authentication_status is None:
