@@ -74,6 +74,11 @@ def save_image(image, company_name):
     image.save(image_path)
     print(f"Image saved: {image_path}")
 
+def check_image_exists(company_name):
+    output_dir = "company_images"
+    image_path = os.path.join(output_dir, f"{company_name}.png")
+    return os.path.exists(image_path)
+
 # Read the Excel file and extract company names
 excel_path = r"C:\projects\fortunafinal\Scripts\data new.xlsx"
 sheet_name = "data"
@@ -84,9 +89,12 @@ try:
 
     for company_name in company_names:
         print(f"Processing: {company_name}")
-        sentiment_image = fetch_sentiment_image(company_name)
-        if sentiment_image:
-            save_image(sentiment_image, company_name)
+        if check_image_exists(company_name):
+            print(f"Image already exists for {company_name}. Skipping fetch.")
+        else:
+            sentiment_image = fetch_sentiment_image(company_name)
+            if sentiment_image:
+                save_image(sentiment_image, company_name)
 
 except FileNotFoundError:
     print(f"Excel file not found: {excel_path}")
