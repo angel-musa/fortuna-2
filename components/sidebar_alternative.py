@@ -80,7 +80,7 @@ def render_watchlist():
             if stock_to_add and stock_to_add not in st.session_state.watchlist:
                 st.session_state.watchlist.append(stock_to_add)
                 save_watchlist_to_db(st.session_state['username'], st.session_state['watchlist'])
-                st.experimental_rerun()  # Refresh the UI after adding a stock
+                
 
     if st.session_state.watchlist:
         st.write("Your Watchlist:")
@@ -95,6 +95,6 @@ def render_watchlist():
                     if st.session_state.selected_stock == stock:
                         st.session_state.selected_stock = None
                     save_watchlist_to_db(st.session_state['username'], st.session_state['watchlist'])
-                    st.experimental_rerun()  # Refresh the UI after removing a stock
+                    
     else:
         st.write("No stocks in the watchlist.")
