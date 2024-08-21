@@ -64,22 +64,25 @@ def render_edit_filters():
 
 def render_watchlist():
     load_css()
+    
+    # Debugging information
     st.write(f"Debug: Watchlist loaded status - {st.session_state.get('watchlist_loaded')}")
     st.write(f"Debug: Current Watchlist - {st.session_state.get('watchlist')}")
 
+    col5, col6 = st.columns([2, 1])
+
+    with col5:
+        stock_to_add = st.selectbox("Add a stock to your watchlist:", options=st.session_state['tickers'], key="add_to_watchlist")
+
+    with col6:
+        st.markdown("<br>", unsafe_allow_html=True)  # Adds spacing above the button
+        if st.button("Add to Watchlist"):
+            if stock_to_add and stock_to_add not in st.session_state.watchlist:
+                st.session_state.watchlist.append(stock_to_add)
+                save_watchlist_to_db(st.session_state['username'], st.session_state['watchlist'])
+                st.experimental_rerun()  # Refresh the UI after adding a stock
+
     if st.session_state.watchlist:
-        col5, col6 = st.columns([2, 1])
-
-        with col5:
-            stock_to_add = st.selectbox("Add a stock to your watchlist:", options=st.session_state['tickers'], key="add_to_watchlist")
-
-        with col6:
-            st.markdown("<br>", unsafe_allow_html=True)  # Adds spacing above the button
-            if st.button("Add to Watchlist"):
-                if stock_to_add and stock_to_add not in st.session_state.watchlist:
-                    st.session_state.watchlist.append(stock_to_add)
-                    save_watchlist_to_db(st.session_state['username'], st.session_state['watchlist'])
-
         st.write("Your Watchlist:")
         for stock in st.session_state.watchlist:
             col_stock, col_remove = st.columns([1, 1])
@@ -92,5 +95,6 @@ def render_watchlist():
                     if st.session_state.selected_stock == stock:
                         st.session_state.selected_stock = None
                     save_watchlist_to_db(st.session_state['username'], st.session_state['watchlist'])
+                    st.experimental_rerun()  # Refresh the UI after removing a stock
     else:
         st.write("No stocks in the watchlist.")
