@@ -15,13 +15,13 @@ st.set_page_config(
 
 load_css()
 
-# Reset session state variables to avoid interference
-if 'authentication_status' in st.session_state:
-    del st.session_state['authentication_status']
-if 'username' in st.session_state:
-    del st.session_state['username']
-if 'name' in st.session_state:
-    del st.session_state['name']
+# # Reset session state variables to avoid interference
+# if 'authentication_status' in st.session_state:
+#     del st.session_state['authentication_status']
+# if 'username' in st.session_state:
+#     del st.session_state['username']
+# if 'name' in st.session_state:
+#     del st.session_state['name']
 
 # Load the YAML configuration file
 config_path = Path(__file__).parent / 'config.yaml'
@@ -36,8 +36,6 @@ except yaml.YAMLError as exc:
 
 # Initialize the authenticator and session state variables
 authenticator = initialize_authenticator(config)
-
-
 
 # Load tickers and initialize session state
 if 'tickers' not in st.session_state:

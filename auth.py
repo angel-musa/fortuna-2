@@ -28,12 +28,9 @@ def handle_authentication(authenticator):
         st.session_state['authentication_status'] = True
         st.session_state['username'] = username
         st.session_state['name'] = name
-    # elif authentication_status is False:
-    #     st.error('Username/password is incorrect')
-    # elif authentication_status is None:
-    #     st.warning('Please enter your username and password')
-
+    # Do not re-prompt login on successful login
     return authentication_status, username, name
+
 
 def load_user_watchlist():
     """Load the user's watchlist if logged in."""
@@ -61,8 +58,5 @@ def handle_logout():
     """Handles user logout by saving the watchlist and resetting session state."""
     if st.session_state.get('username'):
         save_watchlist_to_db(st.session_state['username'], st.session_state.get('watchlist', []))
-    st.session_state['authentication_status'] = None
-    st.session_state['username'] = None
-    st.session_state['name'] = None
-    st.session_state['watchlist'] = []
-    st.session_state['watchlist_loaded'] = False
+    st.session_state.clear()  # Clears all session state variables
+
