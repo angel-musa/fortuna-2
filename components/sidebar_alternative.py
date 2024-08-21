@@ -65,9 +65,9 @@ def render_edit_filters():
 def render_watchlist():
     load_css()
     
-    # Debugging information
-    st.write(f"Debug: Watchlist loaded status - {st.session_state.get('watchlist_loaded')}")
-    st.write(f"Debug: Current Watchlist - {st.session_state.get('watchlist')}")
+    # # Debugging information
+    # st.write(f"Debug: Watchlist loaded status - {st.session_state.get('watchlist_loaded')}")
+    # st.write(f"Debug: Current Watchlist - {st.session_state.get('watchlist')}")
 
     col5, col6 = st.columns([2, 1])
 
