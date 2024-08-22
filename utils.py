@@ -39,7 +39,7 @@ def save_watchlist_to_db(username, watchlist):
     conn.commit()
     conn.close()
 
-def load_ticker_company_map(filepath='data new.xlsx', sheet_name='data'):
+def load_ticker_company_map(filepath='data new.xlsx', sheet_name='short'):
     """Load ticker to company name mapping from an Excel file."""
     file_path = Path(__file__).parent / filepath
     df = pd.read_excel(file_path, sheet_name=sheet_name, usecols=['Symbol', 'Company'])
