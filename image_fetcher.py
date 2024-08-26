@@ -81,7 +81,7 @@ def check_image_exists(company_name):
 
 # Read the Excel file and extract company names
 excel_path = r"C:\projects\fortunafinal\Scripts\data new.xlsx"
-sheet_name = "data"
+sheet_name = "short"
 
 try:
     df = pd.read_excel(excel_path, sheet_name=sheet_name)
