@@ -233,6 +233,9 @@ def render_sentiment(selected_stock):
                         </ul>
                     </li>
                 </ul>
+                
+                <h4>4. Interacting with the Graph:</h4>
+                <p>If you click on the image below, you will be directed to the website where the image is retrieved from. You can interact with the graph to see the exact posts plotted by searching the company name and adding the word 'stock' after it.</p>
             """, unsafe_allow_html=True)
         
         # Load the ticker-company map dictionary by calling the function
