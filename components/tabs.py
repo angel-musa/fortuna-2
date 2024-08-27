@@ -3,6 +3,9 @@ import yfinance as yf
 import pandas as pd
 import pandas_ta as ta
 from utils import cached_forecast, cached_sentiment_image, load_ticker_company_map, load_css
+import base64
+from io import BytesIO
+from PIL import Image
 
 
 def render_tabs(selected_stock):
@@ -231,6 +234,7 @@ def render_sentiment(selected_stock):
                     </li>
                 </ul>
             """, unsafe_allow_html=True)
+        
         # Load the ticker-company map dictionary by calling the function
         ticker_company_map = load_ticker_company_map()  # Now it returns the dictionary
 
@@ -241,6 +245,19 @@ def render_sentiment(selected_stock):
         sentiment_image = cached_sentiment_image(company_name)
 
         if sentiment_image:
-            st.image(sentiment_image, caption=f"Sentiment Analysis for {company_name}")
+            # Convert the image to base64
+            buffered = BytesIO()
+            sentiment_image.save(buffered, format="PNG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+
+            # Set the URL you want to redirect to when the image is clicked
+            target_url = "https://www.csc2.ncsu.edu/faculty/healey/social-media-viz/production/"  # Replace with your desired URL
+
+            # Display the clickable image
+            st.markdown(f"""
+                <a href="{target_url}" target="_blank">
+                    <img src="data:image/png;base64,{img_str}" alt="Sentiment Analysis for {company_name}" style="width:100%; height:auto;"/>
+                </a>
+            """, unsafe_allow_html=True)
         else:
             st.warning("Sentiment analysis image could not be retrieved.")
