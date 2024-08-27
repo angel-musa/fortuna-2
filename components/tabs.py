@@ -61,15 +61,8 @@ def render_financials(ticker):
     earnings = info.get('netIncomeToCommon', 'N/A')
     eps = info.get('trailingEps', 'N/A')
     pe_ratio = info.get('trailingPE', 'N/A')
-    gross_margin = info.get('grossMargins', 'N/A')
     profit_margin = info.get('profitMargins', 'N/A')
     market_cap = info.get('marketCap', 'N/A')
-
-    # Calculate missing values if possible
-    if gross_margin == 'N/A':
-        gross_margin = "N/A"
-    elif gross_margin != 'N/A':
-        gross_margin = info['grossProfit'] / revenue
 
     if profit_margin == 'N/A' and revenue != 'N/A' and earnings != 'N/A':
         profit_margin = earnings / revenue
@@ -83,7 +76,6 @@ def render_financials(ticker):
 
     # Convert values to strings and format percentages or 'N/A' correctly
     pe_ratio_str = f"{pe_ratio:.2f}" if pe_ratio != 'N/A' else 'N/A'
-    gross_margin_str = f"{gross_margin:.2%}" if gross_margin != 'N/A' else 'N/A'
     profit_margin_str = f"{profit_margin:.2%}" if profit_margin != 'N/A' else 'N/A'
 
     # Create the financials table
@@ -104,10 +96,6 @@ def render_financials(ticker):
         <tr>
             <th>PE Ratio</th>
             <td>{pe_ratio_str}</td>
-        </tr>
-        <tr>
-            <th>Gross Margin</th>
-            <td>{gross_margin_str}</td>
         </tr>
         <tr>
             <th>Profit Margin</th>
