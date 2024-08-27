@@ -22,11 +22,12 @@ def render_stock_data(data, selected_stock):
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         hover_text = [
-            f"Date: {date}<br>Open: {open_price}<br>High: {high_price}<br>Low: {low_price}<br>Close: {close_price}<br>Volume: {volume}"
+            f"Date: {date}<br>Open: {open_price:.2f}<br>High: {high_price:.2f}<br>Low: {low_price:.2f}<br>Close: {close_price:.2f}<br>Volume: {volume:.2f}"
             for date, open_price, high_price, low_price, close_price, volume in zip(
                 filtered_df.index, filtered_df['Open'], filtered_df['High'], filtered_df['Low'], filtered_df['Close'], filtered_df['Volume']
             )
         ]
+
 
         if graph_type == "Line":
             fig.add_trace(go.Scatter(x=filtered_df.index, y=filtered_df['Close'], mode='lines', name='Close Price', hovertext=hover_text, line=dict(color='#055749')))
