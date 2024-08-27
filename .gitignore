@@ -92,3 +92,6 @@ ttx.ece
 f2py.exe
 jsonschema.exe
 ttx.exe
+
+run.bat
+run.sh
