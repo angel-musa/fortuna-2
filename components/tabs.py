@@ -55,6 +55,8 @@ def render_financials(ticker):
     load_css()
     info = ticker.info
     st.markdown("### Key Financials:")
+    
+    # Extract values, defaulting to 'N/A' if not available
     revenue = info.get('totalRevenue', 'N/A')
     earnings = info.get('netIncomeToCommon', 'N/A')
     eps = info.get('trailingEps', 'N/A')
@@ -64,17 +66,27 @@ def render_financials(ticker):
     market_cap = info.get('marketCap', 'N/A')
 
     # Calculate missing values if possible
-    if gross_margin == 'N/A' and revenue != 'N/A' and info.get('grossProfit') != 'N/A':
+    if gross_margin == 'N/A':
+        gross_margin = "N/A"
+    elif gross_margin != 'N/A':
         gross_margin = info['grossProfit'] / revenue
 
     if profit_margin == 'N/A' and revenue != 'N/A' and earnings != 'N/A':
         profit_margin = earnings / revenue
+    elif profit_margin != 'N/A':
+        profit_margin = profit_margin
 
-    # Format large numbers
-    revenue = format_large_number(revenue)
-    earnings = format_large_number(earnings)
-    market_cap = format_large_number(market_cap)
+    # Format large numbers only if they are not 'N/A'
+    revenue = format_large_number(revenue) if revenue != 'N/A' else revenue
+    earnings = format_large_number(earnings) if earnings != 'N/A' else earnings
+    market_cap = format_large_number(market_cap) if market_cap != 'N/A' else market_cap
 
+    # Convert values to strings and format percentages or 'N/A' correctly
+    pe_ratio_str = f"{pe_ratio:.2f}" if pe_ratio != 'N/A' else 'N/A'
+    gross_margin_str = f"{gross_margin:.2%}" if gross_margin != 'N/A' else 'N/A'
+    profit_margin_str = f"{profit_margin:.2%}" if profit_margin != 'N/A' else 'N/A'
+
+    # Create the financials table
     financials_html = f"""
     <table class="financials-table">
         <tr>
@@ -91,15 +103,15 @@ def render_financials(ticker):
         </tr>
         <tr>
             <th>PE Ratio</th>
-            <td>{pe_ratio:.2f}</td>
+            <td>{pe_ratio_str}</td>
         </tr>
         <tr>
             <th>Gross Margin</th>
-            <td>{gross_margin:.2%}</td>
+            <td>{gross_margin_str}</td>
         </tr>
         <tr>
             <th>Profit Margin</th>
-            <td>{profit_margin:.2%}</td>
+            <td>{profit_margin_str}</td>
         </tr>
         <tr>
             <th>Market Cap</th>
@@ -108,6 +120,7 @@ def render_financials(ticker):
     </table>
     """
     st.markdown(financials_html, unsafe_allow_html=True)
+
 
 
 def render_latest_news(ticker):
