@@ -8,7 +8,7 @@ from utils import cached_forecast, cached_sentiment_image, load_ticker_company_m
 def render_tabs(selected_stock):
     load_css()
     ticker = yf.Ticker(selected_stock)
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "Financials", "Latest News", "Forecast", "Sentiment"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "Financials", "Latest News", "Sentiment", "Forecast"])
 
     with tab1:
         render_overview(ticker)
@@ -17,9 +17,9 @@ def render_tabs(selected_stock):
     with tab3:
         render_latest_news(ticker)
     with tab4:
-        render_forecast(selected_stock)  # Use cached_forecast here
+        render_sentiment(selected_stock)  # Use cached_forecast here
     with tab5:
-        render_sentiment(selected_stock)  # Use cached_sentiment_image here
+        render_forecast(selected_stock)  # Use cached_sentiment_image here
 
 def render_overview(ticker):
     load_css()
