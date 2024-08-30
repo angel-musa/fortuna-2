@@ -2,6 +2,8 @@
 
 Fortuna is a Streamlit-based application designed to help users analyze stocks, forecast future prices, and perform sentiment analysis based on social media data. The app features a user-friendly interface with various tools and functionalities to assist with investment decisions.
 
+Check out the app! https://fortuna.streamlit.app/
+
 ## Features
 
 - **Stock Overview**: Get detailed information about a stock, including its sector, industry, website, and a company overview.
