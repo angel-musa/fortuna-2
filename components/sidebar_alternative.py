@@ -1,6 +1,6 @@
 import streamlit as st
 from utils import *
-from auth import render_login
+from auth import render_login  # Remove handle_authentication import
 from .main_content import render_stock_data
 import yfinance as yf
 from .tabs import render_tabs
@@ -33,7 +33,10 @@ def render_sidebar_alternative(authenticator):
                 index=0, key="indicator"
             )
 
-        with tabs[2]:
+        with tabs[1]:  # Watchlist tab
+            render_watchlist()
+
+        with tabs[2]:  # Login tab
             render_login(authenticator)
 
     # Use current selections from session (fallbacks provided)
@@ -48,7 +51,6 @@ def render_sidebar_alternative(authenticator):
         render_tabs(selected_stock)
     else:
         st.write("Please select a stock to view the data.")
-
 
 
 def render_edit_filters():
@@ -74,6 +76,11 @@ def render_edit_filters():
 
 def render_watchlist():
     load_css()
+    
+    # Check if user is authenticated
+    if not st.session_state.get('authentication_status'):
+        st.warning("Please login to access your watchlist.")
+        return
     
     # # Debugging information
     # st.write(f"Debug: Watchlist loaded status - {st.session_state.get('watchlist_loaded')}")

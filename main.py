@@ -1,6 +1,6 @@
 import streamlit as st
 from components import header, sidebar_alternative, main_content
-from auth import initialize_authenticator, handle_authentication
+from auth import initialize_authenticator  # Remove handle_authentication import
 from utils import load_yaml_config, load_ticker_company_map, load_css
 from pathlib import Path
 import yaml
@@ -47,5 +47,3 @@ header.render_header()
 
 # Render the sidebar alternative (Edit Filters, Watchlist, Login)
 sidebar_alternative.render_sidebar_alternative(authenticator)
-
-

@@ -5,7 +5,7 @@ credentials:
       failed_login_attempts: 10
       logged_in: False
       name: Angel
-      password: $2b$12$KCTxmlp0Mf4r6ngZkavOEOkb2.JhZsXczsnZZsfQbztHSmSrsib0W
+      password: angel123
 
 cookie:
   expiry_days: 30

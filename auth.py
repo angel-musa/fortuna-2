@@ -13,9 +13,9 @@ def initialize_authenticator(config):
     )
 
 
-def handle_authentication(authenticator):
-    """Handle user authentication and session state initialization."""
-    # Ensure expected keys exist in session_state
+def render_login(authenticator):
+    """Centralized login form to avoid multiple identical forms."""
+    # Initialize session state
     if 'authentication_status' not in st.session_state:
         st.session_state['authentication_status'] = None
     if 'username' not in st.session_state:
@@ -26,29 +26,82 @@ def handle_authentication(authenticator):
         st.session_state['watchlist'] = []
     if 'watchlist_loaded' not in st.session_state:
         st.session_state['watchlist_loaded'] = False
+    if 'login_attempted' not in st.session_state:
+        st.session_state['login_attempted'] = False
 
-    # Login: older API expects only the location positional argument
-    # Returns (name, authentication_status, username)
-    login_result = authenticator.login('main')
-    # Guard against None (older versions can return None if form not rendered)
-    if login_result is None:
-        return None, None, None
-
-    name, authentication_status, username = login_result
-
-    if authentication_status:
-        st.session_state['authentication_status'] = True
-        st.session_state['username'] = username
-        st.session_state['name'] = name
-
-        # Load the watchlist once after successful login
+    # Check if user is already authenticated
+    if st.session_state.get('authentication_status') == True:
+        # User is logged in - show welcome message and logout
+        st.write(f"Welcome, {st.session_state['name']}!")
+        
+        # Load watchlist if not already loaded
         if not st.session_state['watchlist_loaded']:
-            st.session_state['watchlist'] = load_watchlist_from_db(username)
+            st.session_state['watchlist'] = load_watchlist_from_db(st.session_state['username'])
             st.session_state['watchlist_loaded'] = True
-    else:
-        st.session_state['watchlist_loaded'] = False
 
-    return authentication_status, username, name
+        if st.button("Report a Bug", key="report_bug_btn"):
+            st.markdown(
+                '<meta http-equiv="refresh" content="0; url=https://forms.office.com/r/LTHchSsvCm" />',
+                unsafe_allow_html=True
+            )
+
+        # Manual logout button
+        if st.button("Logout", key="logout_btn"):
+            handle_logout()
+            st.rerun()
+
+    else:
+        # Only attempt login if we haven't already tried in this session
+        if not st.session_state.get('login_attempted', False):
+            try:
+                # Mark that we're attempting login to prevent multiple calls
+                st.session_state['login_attempted'] = True
+                
+                # Use a container to isolate the login form
+                with st.container():
+                    name, authentication_status, username = authenticator.login()
+                    
+            except Exception as e:
+                # Fallback for different versions
+                try:
+                    name, authentication_status, username = authenticator.login('main')
+                except Exception as e2:
+                    st.error(f"Login system error: {e2}")
+                    st.session_state['login_attempted'] = False  # Allow retry
+                    return
+
+            # Process authentication result
+            if authentication_status == True:
+                st.session_state['authentication_status'] = True
+                st.session_state['username'] = username
+                st.session_state['name'] = name
+                st.session_state['watchlist'] = load_watchlist_from_db(username)
+                st.session_state['watchlist_loaded'] = True
+                st.session_state['login_attempted'] = False  # Reset for future logins
+                st.rerun()  # Refresh to show logged in state
+                
+            elif authentication_status == False:
+                st.error('Username/password is incorrect')
+                st.session_state['login_attempted'] = False  # Allow retry
+                
+            elif authentication_status == None:
+                st.warning('Please enter your username and password')
+                st.session_state['login_attempted'] = False  # Allow retry
+        else:
+            # Login form already attempted, show message
+            st.info("Login form is active. Please enter your credentials above.")
+
+
+def handle_logout():
+    """Persist watchlist, then clear session state."""
+    if st.session_state.get('username'):
+        save_watchlist_to_db(st.session_state['username'], st.session_state.get('watchlist', []))
+    
+    # Clear all authentication-related session state
+    keys_to_clear = ['authentication_status', 'username', 'name', 'watchlist', 'watchlist_loaded', 'login_attempted']
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
 
 
 def load_user_watchlist():
@@ -58,34 +111,3 @@ def load_user_watchlist():
         if username:
             st.session_state['watchlist'] = load_watchlist_from_db(username)
             st.session_state['watchlist_loaded'] = True
-
-
-def render_login(authenticator):
-    """Centralized login form to avoid multiple identical forms."""
-    authentication_status, username, name = handle_authentication(authenticator)
-
-    if authentication_status:
-        st.write(f"Welcome, {st.session_state['name']}!")
-        load_user_watchlist()
-
-        if st.button("Report a Bug"):
-            st.markdown(
-                '<meta http-equiv="refresh" content="0; url=https://forms.office.com/r/LTHchSsvCm" />',
-                unsafe_allow_html=True
-            )
-
-        # Logout: older API also takes only the location positional argument
-        if authenticator.logout('main'):
-            handle_logout()
-
-    elif authentication_status is False:
-        st.error('Username/password is incorrect')
-    elif authentication_status is None:
-        st.warning('Please enter your username and password')
-
-
-def handle_logout():
-    """Persist watchlist, then clear session state."""
-    if st.session_state.get('username'):
-        save_watchlist_to_db(st.session_state['username'], st.session_state.get('watchlist', []))
-    st.session_state.clear()
