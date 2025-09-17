@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit import components
 import yfinance as yf
 import pandas as pd
 import pandas_ta as ta
@@ -6,6 +7,7 @@ from utils import cached_forecast, cached_sentiment_image, load_ticker_company_m
 import base64
 from io import BytesIO
 from PIL import Image
+from utils import get_news
 
 
 def render_tabs(selected_stock):
@@ -109,30 +111,6 @@ def render_financials(ticker):
     """
     st.markdown(financials_html, unsafe_allow_html=True)
 
-
-
-def render_latest_news(ticker):
-    load_css()
-    news_data = ticker.news
-    if news_data:
-        st.markdown('<div class="news-grid">', unsafe_allow_html=True)
-        for article in news_data[:6]:
-            title = article['title']
-            link = article['link']
-            news_card_html = f"""
-            <div class="news-card">
-                <a href="{link}" target="_blank">
-                    <div class="news-card-container">
-                        <p class="news-card-title">{title}</p>
-                        <p class="news-card-date">Date: {pd.to_datetime(article['providerPublishTime'], unit='s').strftime('%Y-%m-%d')}</p>
-                    </div>
-                </a>
-            </div>
-            """
-            st.markdown(news_card_html, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        st.write("No news available for this stock.")
 
 def render_forecast(selected_stock):
     load_css()
@@ -265,3 +243,85 @@ def render_sentiment(selected_stock):
             """, unsafe_allow_html=True)
         else:
             st.warning("Sentiment analysis image could not be retrieved.")
+
+
+import streamlit as st
+from datetime import datetime
+
+# --- helper: normalize a variety of news item shapes into one shape ---
+def _normalize_news_items(news_data):
+    """
+    Accepts a list of dicts (possibly inconsistent) and returns a clean list of:
+    {title, url, source, published}
+    Safely ignores items missing essential fields.
+    """
+    if not isinstance(news_data, (list, tuple)):
+        return []
+
+    normalized = []
+    for a in news_data:
+        if not isinstance(a, dict):
+            continue
+
+        # Try multiple common keys for each field
+        title = a.get("title") or a.get("headline") or a.get("Title")
+        url = a.get("link") or a.get("url") or a.get("Link")
+        source = a.get("source") or a.get("publisher") or a.get("Source") or ""
+        published = (
+            a.get("published")
+            or a.get("pubDate")
+            or a.get("time_published")
+            or a.get("date")
+            or a.get("published_utc")
+            or ""
+        )
+
+        # Basic validation: must have title + url to render a card
+        if not title or not url:
+            continue
+
+        # Best-effort format timestamp to readable string
+        ts = published
+        if isinstance(ts, (int, float)):
+            try:
+                ts = datetime.fromtimestamp(int(ts)).strftime("%Y-%m-%d %H:%M")
+            except Exception:
+                pass
+        elif isinstance(ts, str):
+            # Keep as-is; caller likely passed ISO or human string
+            pass
+        else:
+            ts = ""
+
+        normalized.append(
+            {
+                "title": str(title).strip(),
+                "url": str(url).strip(),
+                "source": str(source).strip(),
+                "published": ts,
+            }
+        )
+    return normalized
+
+def render_latest_news(ticker: str):
+
+    raw_news = get_news(ticker, max_items=8, cache_key=str(ticker))
+    items = _normalize_news_items(raw_news)
+    
+    if not items:
+        st.info("No recent news found for this ticker.")
+        return
+
+    st.markdown('<div class="news-grid">', unsafe_allow_html=True)
+    for art in items[:6]:
+        title = art["title"]; url = art["url"]; source = art["source"]; published = art["published"]
+        st.markdown(
+            f"""
+            <a class="news-card" href="{url}" target="_blank" rel="noopener noreferrer">
+                <div class="news-title">{title}</div>
+                <div class="news-meta">{source}{' • ' + published if published else ''}</div>
+            </a>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.markdown('</div>', unsafe_allow_html=True)

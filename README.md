@@ -29,52 +29,36 @@ The `image_fetcher.py` script runs every hour using a scheduled task on the loca
 ### 5. Watchlist Functionality
 Users can add stocks to their watchlist, which is saved in a database (`watchlist.db`). The watchlist is loaded upon login, allowing users to easily manage and view their favorite stocks.
 
-## Installation
+# Fortuna — Stock Analysis & Forecasting 💸
 
-To run this app locally, follow these steps:
+Fortuna is a Streamlit app for exploring equities: price/volume charts with indicators, recent news, a sentiment image viewer, and an LSTM-based forecasting tab. It’s optimized for a simple local run and fast iteration.
 
-1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/yourusername/fortuna-app.git
-    cd fortuna-app
-    ```
+## Requirements
 
-2. **Create a virtual environment and activate it:**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    ```
+- **Python**: **3.12+ (tested on 3.13)**  
+  - Needed for **pandas-ta ≥ 0.4.x**.  
+  - If you must use Python 3.11, pin `pandas-ta==0.3.14b0` (legacy API).
+- Windows/macOS/Linux
+- Recommended: virtual environment
 
-3. **Install the required dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+## Quick Start
 
-4. **Set up your configuration:**
-   - Edit the `config.yaml` file with your user credentials, cookie settings, and other configurations.
+```bash
+# 1) Clone
+git clone <your-repo-url>
+cd fortuna-2   # or your folder name
 
-5. **Run the app:**
-    ```bash
-    streamlit run main.py
-    ```
+# 2) Create & activate venv (Windows example uses Python 3.13)
+py -3.13 -m venv .venv
+.\.venv\Scripts\activate
+# If PowerShell blocks activation, run:  Set-ExecutionPolicy -Scope Process Bypass
 
-## Automated Image Fetching
+# 3) Install deps
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 
-The sentiment images are updated automatically every hour through a scheduled task on a local machine. Here’s how you can set up the automation:
+# 4) Configure credentials/cookies
+# Edit config.yaml with your users, cookie name/key, and expiry_days
 
-1. **Set up a Scheduled Task (Windows):**
-   - Open Task Scheduler and create a new task.
-   - Set the trigger to run every hour.
-   - Set the action to run the `image_fetcher.py` script, which should be located in the same directory as your app.
-
-2. **Ensure Git Access:**
-   - Make sure your script has access to push updates to your GitHub repository. You can use SSH keys or store credentials securely.
-
-## Usage
-
-- **Login:** Log in to access personalized features.
-- **Stock Selection:** Choose a stock from the list to view its detailed analysis.
-- **Watchlist:** Add and manage your favorite stocks in the watchlist.
-- **Sentiment Analysis:** View the sentiment heatmap for the selected stock, which is updated every hour.
-
-
+# 5) Run
+streamlit run main.py

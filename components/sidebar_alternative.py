@@ -5,40 +5,50 @@ from .main_content import render_stock_data
 import yfinance as yf
 from .tabs import render_tabs
 
+import yfinance as yf
+from components.main_content import render_stock_data
+from components.tabs import render_tabs
+from auth import render_login
+import streamlit as st
+
 def render_sidebar_alternative(authenticator):
-    load_css()
-    col1, col2 = st.columns([1, 4], gap="medium")
-
-    with col1:
+    with st.sidebar:
         st.header("Menu")
+        tabs = st.tabs(["Edit Filters", "Watchlist", "Login"])
 
-        tab_selection = st.tabs(["Edit Filters", "Watchlist", "Login"])
+        with tabs[0]:
+            period = st.radio(
+                "Select Time Period:",
+                ["5d","1mo","3mo","6mo","1y","2y","5y","10y","ytd","max"],
+                index=4, key="period"
+            )
+            graph_type = st.radio(
+                "Select Graph Type:",
+                ["Line","Candlestick","Bar","Scatter"],
+                index=1, key="graph_type"
+            )
+            indicator = st.radio(
+                "Select Technical Indicator:",
+                ["None","BBANDS","SMA","EMA"],
+                index=0, key="indicator"
+            )
 
-        with tab_selection[0]:
-            render_edit_filters()
-
-        with tab_selection[1]:
-            if st.session_state.get('authentication_status'):
-                if st.session_state.get('watchlist_loaded'):
-                    render_watchlist()
-                else:
-                    st.write("Loading your watchlist...")
-                    # You might consider forcing a reload or some feedback here
-                    
-            else:
-                st.write("Please log in to view your watchlist.")
-
-        with tab_selection[2]:
+        with tabs[2]:
             render_login(authenticator)
 
-    with col2:
-        selected_stock = st.session_state.get('selected_stock')
-        if selected_stock:
-            data = yf.download(selected_stock, period="1y")
-            render_stock_data(data, selected_stock)
-            render_tabs(selected_stock)
-        else:
-            st.write("Please select a stock to view the data.")
+    # Use current selections from session (fallbacks provided)
+    selected_stock = st.session_state.get("selected_stock")
+    if selected_stock:
+        period = st.session_state.get("period", "1y")
+        graph_type = st.session_state.get("graph_type", "Candlestick")
+        indicator = st.session_state.get("indicator", "None")
+
+        data = yf.download(selected_stock, period=period, progress=False, auto_adjust=False)
+        render_stock_data(data, selected_stock, graph_type=graph_type, indicator=indicator)
+        render_tabs(selected_stock)
+    else:
+        st.write("Please select a stock to view the data.")
+
 
 
 def render_edit_filters():

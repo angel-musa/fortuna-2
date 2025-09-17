@@ -1,96 +1,142 @@
-import streamlit as st
-import yfinance as yf
-from utils import cached_forecast, cached_sentiment_image, load_css
-from components.tabs import render_tabs
-import plotly.graph_objs as go
+from datetime import datetime
+import pandas as pd
+import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import pandas_ta as ta
-import sys
+import streamlit as st
 
+def render_stock_data(df: pd.DataFrame, selected_stock: str, graph_type: str = "Candlestick", indicator: str = "None"):
+    """
+    Render stock chart for a yfinance DataFrame (df) of `selected_stock`,
+    with robust dtype handling (MultiIndex, 1-D coercion) and safe hover formatting.
+    graph_type: "Line" or "Candlestick"
+    """
+    if df is None or df.empty:
+        st.warning("No data available for the selected ticker.")
+        return
 
-def render_stock_data(data, selected_stock):
-    load_css()
-    """Renders the stock data visualization with technical indicators."""
-    if not data.empty:
-        time_period = st.session_state.get('time_period', '1y')  # Use session state or default to 1y
-        graph_type = st.session_state.get('graph_type', 'Line')  # Use session state or default to Line
-        indicator = st.session_state.get('indicator', 'None')  # Use session state or default to None
-        
-        # Filter data based on the selected time period
-        filtered_df = yf.download(selected_stock, period=time_period)
+    # Ensure DatetimeIndex
+    if not isinstance(df.index, pd.DatetimeIndex):
+        try:
+            df.index = pd.to_datetime(df.index)
+        except Exception:
+            pass
 
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
+    # If yfinance returned MultiIndex columns (e.g., after certain calls), flatten them
+    if isinstance(df.columns, pd.MultiIndex):
+        df = df.copy()
+        # pick the top-level names; if duplicates, later selection by known names handles it
+        df.columns = df.columns.get_level_values(0)
 
-        hover_text = [
-            f"Date: {date}<br>Open: {open_price:.2f}<br>High: {high_price:.2f}<br>Low: {low_price:.2f}<br>Close: {close_price:.2f}<br>Volume: {volume:.2f}"
-            for date, open_price, high_price, low_price, close_price, volume in zip(
-                filtered_df.index, filtered_df['Open'], filtered_df['High'], filtered_df['Low'], filtered_df['Close'], filtered_df['Volume']
-            )
-        ]
+    # Keep standard columns if they exist
+    cols = [c for c in ["Open", "High", "Low", "Close", "Adj Close", "Volume"] if c in df.columns]
+    if not cols:
+        st.error("Downloaded data does not contain expected OHLC columns.")
+        return
+    filtered_df = df[cols].copy()
 
+    # --- Coerce to numeric (squeeze to 1-D first to avoid 'arg must be 1-d' errors) ---
+    def to_num_1d(s):
+        # If a single-column DataFrame slipped through, squeeze to Series
+        if isinstance(s, pd.DataFrame) and s.shape[1] == 1:
+            s = s.squeeze(axis=1)
+        return pd.to_numeric(s, errors="coerce")
 
-        if graph_type == "Line":
-            fig.add_trace(go.Scatter(x=filtered_df.index, y=filtered_df['Close'], mode='lines', name='Close Price', hovertext=hover_text, line=dict(color='#055749')))
-        elif graph_type == "Candlestick":
-            fig.add_trace(go.Candlestick(x=filtered_df.index, open=filtered_df['Open'], high=filtered_df['High'], low=filtered_df['Low'], close=filtered_df['Close'], name='Candlestick'))
-        elif graph_type == "Bar":
-            fig.add_trace(go.Bar(x=filtered_df.index, y=filtered_df['Close'], name='Close Price', hovertext=hover_text, marker=dict(color='#055749')))
-        elif graph_type == "Scatter":
-            fig.add_trace(go.Scatter(x=filtered_df.index, y=filtered_df['Close'], mode='markers', name='Close Price', hovertext=hover_text, line=dict(color='#055749')))
+    for col in ["Open", "High", "Low", "Close", "Adj Close", "Volume"]:
+        if col in filtered_df.columns:
+            filtered_df[col] = to_num_1d(filtered_df[[col]] if isinstance(filtered_df[col], pd.Series) is False else filtered_df[col])
 
-        # Create a secondary chart for low-value indicators
-        fig_indicator = make_subplots(specs=[[{"secondary_y": True}]])
+    # Choose price series (prefer Close, fallback to Adj Close)
+    price_series = (
+        filtered_df["Close"]
+        if "Close" in filtered_df.columns
+        else filtered_df["Adj Close"]
+        if "Adj Close" in filtered_df.columns
+        else None
+    )
+    if price_series is None:
+        st.error("No Close or Adj Close column found.")
+        return
 
-        # Apply selected technical indicator
-        if indicator == 'MACD':
-            macd = ta.macd(filtered_df['Close'])
-            fig_indicator.add_trace(go.Scatter(x=filtered_df.index, y=macd['MACD_12_26_9'], mode='lines', name='MACD'))
-            fig_indicator.add_trace(go.Scatter(x=filtered_df.index, y=macd['MACDs_12_26_9'], mode='lines', name='MACD Signal'))
-            fig_indicator.add_trace(go.Scatter(x=filtered_df.index, y=macd['MACDh_12_26_9'], mode='lines', name='MACD Histogram'))
-        elif indicator == 'RSI':
-            rsi = ta.rsi(filtered_df['Close'])
-            fig_indicator.add_trace(go.Scatter(x=filtered_df.index, y=rsi, mode='lines', name='RSI'))
-        elif indicator == 'BBANDS':
-            bbands = ta.bbands(filtered_df['Close'])
-            fig.add_trace(go.Scatter(x=filtered_df.index, y=bbands['BBL_5_2.0'], mode='lines', name='BB Lower Band'))
-            fig.add_trace(go.Scatter(x=filtered_df.index, y=bbands['BBM_5_2.0'], mode='lines', name='BB Middle Band'))
-            fig.add_trace(go.Scatter(x=filtered_df.index, y=bbands['BBU_5_2.0'], mode='lines', name='BB Upper Band'))
-        elif indicator == 'SMA':
-            sma_20 = ta.sma(filtered_df['Close'], length=20)
-            sma_50 = ta.sma(filtered_df['Close'], length=50)
-            sma_200 = ta.sma(filtered_df['Close'], length=200)
-            fig.add_trace(go.Scatter(x=sma_20.index, y=sma_20, mode='lines', name='SMA 20'))
-            fig.add_trace(go.Scatter(x=sma_50.index, y=sma_50, mode='lines', name='SMA 50'))
-            if len(filtered_df) >= 200:
-                fig.add_trace(go.Scatter(x=sma_200.index, y=sma_200, mode='lines', name='SMA 200'))
-            else:
-                st.warning("Not enough data to calculate the 200-day SMA.")
-        elif indicator == 'EMA':
-            ema_10 = ta.ema(filtered_df['Close'], length=10)
-            ema_50 = ta.ema(filtered_df['Close'], length=50)
-            ema_200 = ta.ema(filtered_df['Close'], length=200)
-            fig.add_trace(go.Scatter(x=ema_10.index, y=ema_10, mode='lines', name='EMA 10'))
-            fig.add_trace(go.Scatter(x=ema_50.index, y=ema_50, mode='lines', name='EMA 50'))
-            if len(filtered_df) >= 200:
-                fig.add_trace(go.Scatter(x=ema_200.index, y=ema_200, mode='lines', name='EMA 200'))
-            else:
-                st.warning("Not enough data to calculate the 200-day EMA.")
-        elif indicator == 'PE Ratio':
-            info = yf.Ticker(selected_stock).info
-            if 'trailingEps' in info and info['trailingEps'] and not filtered_df.empty:
-                pe_series = filtered_df['Close'] / info['trailingEps']
-                fig_indicator.add_trace(go.Scatter(x=filtered_df.index, y=pe_series, mode='lines', name='PE Ratio'))
-            else:
-                st.warning("Insufficient data to calculate PE Ratio.")
+    # Helpers for safe hover formatting
+    def fmt2(x):
+        try:
+            return f"{float(x):.2f}" if pd.notna(x) else "—"
+        except Exception:
+            return "—"
 
-        # Render the main chart
-        fig.update_layout(title=f"{selected_stock} Price Analysis ({graph_type}) Chart")
-        st.plotly_chart(fig, use_container_width=True)
+    def fmt_int(x):
+        try:
+            return f"{int(x)}"
+        except Exception:
+            return "—"
 
-        # Render the indicator chart, if applicable
-        if indicator in ['MACD', 'RSI', 'PE Ratio']:
-            fig_indicator.update_layout(title=f"{selected_stock} {indicator} Indicator")
-            st.plotly_chart(fig_indicator, use_container_width=True)
+    def fmt_date(d):
+        if hasattr(d, "to_pydatetime"):
+            d = d.to_pydatetime()
+        if isinstance(d, datetime):
+            return d.strftime("%Y-%m-%d")
+        return str(d)
 
-    else:
-        st.warning(f"No data available for {selected_stock}.")
+    idx = filtered_df.index
+    open_s  = filtered_df["Open"]  if "Open"  in filtered_df else pd.Series([None]*len(filtered_df), index=idx)
+    high_s  = filtered_df["High"]  if "High"  in filtered_df else pd.Series([None]*len(filtered_df), index=idx)
+    low_s   = filtered_df["Low"]   if "Low"   in filtered_df else pd.Series([None]*len(filtered_df), index=idx)
+    close_s = filtered_df["Close"] if "Close" in filtered_df else price_series
+    vol_s   = filtered_df["Volume"] if "Volume" in filtered_df else pd.Series([None]*len(filtered_df), index=idx)
+
+    hover_text = [
+        (
+            f"Date: {fmt_date(t)}"
+            f"<br>Open: {fmt2(o)}"
+            f"<br>High: {fmt2(h)}"
+            f"<br>Low: {fmt2(l)}"
+            f"<br>Close: {fmt2(c)}"
+            f"<br>Volume: {fmt_int(v)}"
+        )
+        for t, o, h, l, c, v in zip(idx, open_s, high_s, low_s, close_s, vol_s)
+    ]
+
+    # --- Plotly chart ---
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    if graph_type == "Line":
+        fig.add_trace(go.Scatter(x=idx, y=price_series, mode="lines", name="Close",
+                                 hovertext=hover_text, hoverinfo="text"), secondary_y=True)
+    elif graph_type == "Scatter":
+        fig.add_trace(go.Scatter(x=idx, y=price_series, mode="markers", name="Close",
+                                 hovertext=hover_text, hoverinfo="text"), secondary_y=True)
+    elif graph_type == "Bar":
+        # OHLC-style bars
+        fig.add_trace(go.Ohlc(x=idx, open=open_s, high=high_s, low=low_s, close=close_s,
+                              name="Price", hovertext=hover_text, hoverinfo="text"), secondary_y=True)
+    else:  # Candlestick
+        fig.add_trace(go.Candlestick(x=idx, open=open_s, high=high_s, low=low_s, close=close_s,
+                                     name="Price", hovertext=hover_text, hoverinfo="text"), secondary_y=True)
+
+    # --- Simple indicator overlays (optional) ---
+    ind = (indicator or "None").upper()
+    if ind == "EMA" and not close_s.isna().all():
+        ema = close_s.ewm(span=20, adjust=False).mean()
+        fig.add_trace(go.Scatter(x=idx, y=ema, mode="lines", name="EMA(20)"), secondary_y=True)
+    elif ind == "SMA" and not close_s.isna().all():
+        sma = close_s.rolling(20).mean()
+        fig.add_trace(go.Scatter(x=idx, y=sma, mode="lines", name="SMA(20)"), secondary_y=True)
+    elif ind == "BBANDS" and not close_s.isna().all():
+        m = close_s.rolling(20).mean(); s = close_s.rolling(20).std()
+        upper, lower = m + 2*s, m - 2*s
+        fig.add_trace(go.Scatter(x=idx, y=upper, mode="lines", name="BB Upper", line=dict(dash="dot")), secondary_y=True)
+        fig.add_trace(go.Scatter(x=idx, y=m,     mode="lines", name="BB Mid",   line=dict(dash="dash")), secondary_y=True)
+        fig.add_trace(go.Scatter(x=idx, y=lower, mode="lines", name="BB Lower", line=dict(dash="dot")), secondary_y=True)
+    # (RSI/MACD/PE not plotted here to keep layout simple)
+
+    if "Volume" in filtered_df:
+        fig.add_trace(go.Bar(x=idx, y=vol_s, name="Volume", opacity=0.4,
+                             hovertemplate="Date: %{x}<br>Volume: %{y}<extra></extra>"),
+                      secondary_y=False)
+
+    fig.update_layout(title=f"{selected_stock} — {st.session_state.get('period','1y').upper()} Price & Volume",
+                      xaxis_title="Date", yaxis_title="Price",
+                      legend_title="", template="plotly_white", hovermode="x unified")
+    fig.update_xaxes(showspikes=True, spikemode="across", spikesnap="cursor", showline=True)
+    fig.update_yaxes(showspikes=True, spikemode="across", spikesnap="cursor", showline=True, secondary_y=True)
+
+    st.plotly_chart(fig, use_container_width=True)
