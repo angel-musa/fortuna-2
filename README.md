@@ -29,9 +29,6 @@ The `image_fetcher.py` script runs every hour using a scheduled task on the loca
 ### 5. Watchlist Functionality
 Users can add stocks to their watchlist, which is saved in a database (`watchlist.db`). The watchlist is loaded upon login, allowing users to easily manage and view their favorite stocks.
 
-# Fortuna — Stock Analysis & Forecasting 💸
-
-Fortuna is a Streamlit app for exploring equities: price/volume charts with indicators, recent news, a sentiment image viewer, and an LSTM-based forecasting tab. It’s optimized for a simple local run and fast iteration.
 
 ## Requirements
 
